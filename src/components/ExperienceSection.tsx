@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionValueEvent } from "framer-motion";
 import { useRef } from "react";
 import { GraduationCap, Briefcase } from "lucide-react";
 
@@ -8,16 +8,16 @@ const PaperPlane = ({ size = 22 }: { size?: number }) => (
     width={size}
     height={size}
     viewBox="0 0 24 24"
-    fill="#0f172a"
-    stroke="#0f172a"
+    fill="white"
+    stroke="white"
     strokeWidth="1"
     strokeLinejoin="round"
     strokeLinecap="round"
     aria-hidden="true"
-    style={{ transform: "rotate(-45deg)" }}
+    style={{ transform: "rotate(135deg)" }}
   >
     <path d="M21.5 2.5 2.5 10.5l7 2.5 2.5 7 9.5-17.5z" />
-    <path d="m9.5 13 4-4" stroke="#0f172a" fill="none" />
+    <path d="m9.5 13 4-4" stroke="white" fill="none" />
   </svg>
 );
 
@@ -72,8 +72,23 @@ const ExperienceSection = () => {
   const smooth = useSpring(scrollYProgress, { stiffness: 120, damping: 20, mass: 0.4 });
   const airplaneY = useTransform(smooth, [0, 1], ["0%", "100%"]);
   const lineScale = useTransform(smooth, [0, 1], [0, 1]);
-  const tilt = useTransform(smooth, [0, 0.5, 1], [-6, 4, -2]);
 
+  const rotateTarget = useMotionValue(0);
+  const rotateSpring = useSpring(rotateTarget, { stiffness: 220, damping: 24 });
+  const prevProgress = useRef(0);
+  const DIRECTION_THRESHOLD = 0.0015;
+
+useMotionValueEvent(scrollYProgress, "change", (latest) => {
+  const diff = latest - prevProgress.current;
+
+  if (diff > DIRECTION_THRESHOLD) {
+    rotateTarget.set(0);
+  } else if (diff < -DIRECTION_THRESHOLD) {
+    rotateTarget.set(180);
+  }
+
+  prevProgress.current = latest;
+});
   return (
     <section id="experience" className="relative">
       <div className="section-container">
@@ -83,29 +98,26 @@ const ExperienceSection = () => {
         </div>
 
         <div ref={containerRef} className="relative pl-10 md:pl-0">
-          {/* Center line - base */}
           <div
             className="absolute top-0 bottom-0 w-px left-4 md:left-1/2 md:-translate-x-1/2 border-l border-dashed border-border"
             aria-hidden
           />
-          {/* Center line - progress fill */}
           <motion.div
             aria-hidden
             style={{ scaleY: lineScale, transformOrigin: "top", background: "var(--hero-gradient)" }}
             className="absolute top-0 bottom-0 w-[2px] left-4 md:left-1/2 md:-translate-x-1/2 rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.6)]"
           />
 
-          {/* Airplane - truly centered on the line */}
           <motion.div
-            style={{ top: airplaneY, rotate: tilt, x: "-50%", y: "-50%" }}
+            style={{ top: airplaneY, x: "-50%", y: "-50%" }}
             className="absolute left-4 md:left-1/2 z-20 pointer-events-none"
             aria-hidden
           >
             <motion.div
               animate={{ y: [0, -3, 0, 3, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              style={{ background: "var(--hero-gradient)", rotate: rotateSpring }}
               className="w-11 h-11 rounded-full flex items-center justify-center shadow-[0_0_24px_hsl(var(--primary)/0.55)]"
-              style={{ background: "var(--hero-gradient)" }}
             >
               <PaperPlane size={20} />
             </motion.div>
@@ -125,13 +137,11 @@ const ExperienceSection = () => {
                   transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                   className={`relative flex ${leftSide ? "md:flex-row" : "md:flex-row-reverse"} flex-row items-start`}
                 >
-                  {/* connector dot on the center line */}
                   <span
                     aria-hidden
                     className="absolute top-8 left-4 md:left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.6)] z-10"
                   />
 
-                  {/* content half */}
                   <div
                     className={`ml-12 md:ml-0 md:w-1/2 ${
                       leftSide ? "md:pr-12 md:text-right" : "md:pl-12"
@@ -165,7 +175,6 @@ const ExperienceSection = () => {
                     </div>
                   </div>
 
-                  {/* empty spacer for the other half (desktop) */}
                   <div className="hidden md:block md:w-1/2" aria-hidden />
                 </motion.div>
               );

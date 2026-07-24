@@ -61,12 +61,13 @@ const Navbar = () => {
           className="flex items-center"
         >
           <span
-            className="w-6 h-6 rounded-md"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tight select-none"
             style={{ background: "var(--hero-gradient)" }}
-          />
+          >
+            RS
+          </span>
         </a>
 
-        {/* Desktop */}
         <ul className="hidden md:flex gap-8">
           {navItems.map((item) => {
             const isActive = active === item.href.slice(1);
@@ -88,7 +89,6 @@ const Navbar = () => {
           })}
         </ul>
 
-        {/* Mobile toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="md:hidden text-foreground"
