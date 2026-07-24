@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, MotionValue, PanInfo } from "framer-motion";
 import { Code2, Wrench, Sparkles } from "lucide-react";
 
 const groups = [
@@ -197,10 +197,11 @@ function SkillCard({
 const SkillsSection = () => {
   const stickyRef = useRef<HTMLDivElement>(null);
   const [wrapRef, wrapWidth] = useContainerWidth();
+  const [isDragging, setIsDragging] = useState(false);
 
-  const CARD_W = clamp(wrapWidth ? wrapWidth * 0.4 : 560, 320, 640);
-  const SIDE_SCALE = 0.7;
-  const GAP = clamp(CARD_W * 0.3, 56, 170);
+  const CARD_W = clamp(wrapWidth ? wrapWidth * 0.54 : 680, 380, 780);
+  const SIDE_SCALE = 0.68;
+  const GAP = clamp(CARD_W * 0.26, 56, 170);
   const SIDE_X = CARD_W / 2 + (CARD_W * SIDE_SCALE) / 2 + GAP;
 
   const { scrollYProgress } = useScroll({
@@ -221,6 +222,16 @@ const SkillsSection = () => {
   const rightEdgeOfCenter = CARD_W / 2;
   const leftEdgeOfRightSlot = SIDE_X - (CARD_W * SIDE_SCALE) / 2;
 
+  // Dragging the card row horizontally scrolls the page vertically by the
+  // matching amount, so drag and native scroll drive the exact same value:
+  // no separate state, no conflict, both stay in sync at all times. Dragging
+  // a distance of SIDE_X moves through exactly one card, matching the feel
+  // of a normal scroll-driven step.
+  const handlePan = (_event: unknown, info: PanInfo) => {
+    const sensitivity = window.innerHeight / SIDE_X;
+    window.scrollBy({ top: -info.delta.x * sensitivity, left: 0 });
+  };
+
   return (
     <section id="skills" className="relative">
       <style>{`
@@ -240,16 +251,24 @@ const SkillsSection = () => {
           <p className="section-subtitle mx-auto">Technologies and tools I work with.</p>
         </motion.div>
         <p className="text-xs text-muted-foreground/40 mt-3 tracking-widest uppercase">
-          scroll to explore
+          scroll or drag to explore
         </p>
       </div>
 
       <div ref={stickyRef} style={{ height: `${groups.length * 100}vh` }} className="relative">
         <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
-          <div
+          <motion.div
             ref={wrapRef}
             className="relative w-full max-w-7xl"
-            style={{ height: CARD_W * 0.95, perspective: 1400 }}
+            style={{
+              height: CARD_W * 0.95,
+              perspective: 1400,
+              cursor: isDragging ? "grabbing" : "grab",
+              touchAction: "pan-y",
+            }}
+            onPan={handlePan}
+            onPanStart={() => setIsDragging(true)}
+            onPanEnd={() => setIsDragging(false)}
           >
             <ConnectorString
               x1={rightEdgeOfLeftSlot}
@@ -273,7 +292,7 @@ const SkillsSection = () => {
                 sideX={SIDE_X}
               />
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
