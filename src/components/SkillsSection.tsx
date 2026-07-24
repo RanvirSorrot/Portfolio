@@ -199,7 +199,8 @@ const SkillsSection = () => {
   const [wrapRef, wrapWidth] = useContainerWidth();
   const [isDragging, setIsDragging] = useState(false);
 
-  const CARD_W = clamp(wrapWidth ? wrapWidth * 0.54 : 680, 380, 780);
+  const minCardW = wrapWidth ? Math.min(380, wrapWidth * 0.74) : 300;
+  const CARD_W = clamp(wrapWidth ? wrapWidth * 0.54 : 680, minCardW, 780);
   const SIDE_SCALE = 0.68;
   const GAP = clamp(CARD_W * 0.26, 56, 170);
   const SIDE_X = CARD_W / 2 + (CARD_W * SIDE_SCALE) / 2 + GAP;
@@ -222,14 +223,21 @@ const SkillsSection = () => {
   const rightEdgeOfCenter = CARD_W / 2;
   const leftEdgeOfRightSlot = SIDE_X - (CARD_W * SIDE_SCALE) / 2;
 
-  // Dragging the card row horizontally scrolls the page vertically by the
-  // matching amount, so drag and native scroll drive the exact same value:
-  // no separate state, no conflict, both stay in sync at all times. Dragging
-  // a distance of SIDE_X moves through exactly one card, matching the feel
-  // of a normal scroll-driven step.
+  // Dragging the card row scrolls the page by the matching amount, so drag
+  // and native scroll drive the exact same value: no separate state, no
+  // conflict. We take full manual control of the gesture here (touchAction:
+  // "none" below) instead of leaving vertical panning to the browser —
+  // handing vertical off to native touch scrolling is what caused mobile
+  // swipes to get "stuck": the instant a touch drifts even slightly
+  // vertically, the browser locks the whole gesture to its own scroll and
+  // never lets horizontal movement reach this handler. Forwarding both axes
+  // ourselves means nothing is left for the browser to hijack, and vertical
+  // drags still feel like normal 1:1 scrolling since we forward delta.y
+  // directly. Dragging a distance of SIDE_X horizontally moves through
+  // exactly one card.
   const handlePan = (_event: unknown, info: PanInfo) => {
     const sensitivity = window.innerHeight / SIDE_X;
-    window.scrollBy({ top: -info.delta.x * sensitivity, left: 0 });
+    window.scrollBy({ top: -info.delta.y - info.delta.x * sensitivity, left: 0 });
   };
 
   return (
@@ -264,7 +272,7 @@ const SkillsSection = () => {
               height: CARD_W * 0.95,
               perspective: 1400,
               cursor: isDragging ? "grabbing" : "grab",
-              touchAction: "pan-y",
+              touchAction: "none",
             }}
             onPan={handlePan}
             onPanStart={() => setIsDragging(true)}
