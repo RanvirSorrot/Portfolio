@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon, Download } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 const navItems = [
   { label: "Home", href: "#home" },
@@ -14,6 +15,7 @@ const navItems = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [active, setActive] = useState("home");
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const ids = navItems.map((n) => n.href.slice(1));
@@ -89,13 +91,39 @@ const Navbar = () => {
           })}
         </ul>
 
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-foreground"
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="w-9 h-9 rounded-lg flex items-center justify-center border border-border/50 bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+          >
+            {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+
+          <a
+            href="/resume.pdf"
+            download
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+            style={{ background: "var(--hero-gradient)" }}
+          >
+            <motion.span
+              animate={{ y: [0, -4, 0] }}
+              transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
+              className="flex items-center"
+            >
+              <Download size={15} />
+            </motion.span>
+            Download Resume
+          </a>
+
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden text-foreground"
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
