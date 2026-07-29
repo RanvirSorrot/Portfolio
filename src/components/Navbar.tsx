@@ -63,7 +63,7 @@ const Navbar = () => {
           className="flex items-center"
         >
           <span
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tight select-none"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-base tracking-tight select-none"
             style={{ background: "var(--hero-gradient)" }}
           >
             RS
@@ -74,18 +74,23 @@ const Navbar = () => {
           {navItems.map((item) => {
             const isActive = active === item.href.slice(1);
             return (
-              <li key={item.href}>
+              <li key={item.href} className="relative">
                 <a
                   href={item.href}
                   onClick={(e) => handleClick(e, item.href)}
-                  className={`text-sm font-medium transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:h-0.5 after:bg-primary after:transition-all ${
-                    isActive
-                      ? "text-primary after:w-full"
-                      : "text-muted-foreground hover:text-primary after:w-0 hover:after:w-full"
+                  className={`text-base font-medium transition-colors relative z-10 pb-1 ${
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
                   }`}
                 >
                   {item.label}
                 </a>
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="absolute left-0 right-0 -bottom-0.5 h-0.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
               </li>
             );
           })}
@@ -103,7 +108,7 @@ const Navbar = () => {
           <a
             href="/resume.pdf"
             download
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-base font-medium text-primary-foreground hover:opacity-90 transition-opacity"
             style={{ background: "var(--hero-gradient)" }}
           >
             <motion.span
@@ -141,7 +146,7 @@ const Navbar = () => {
                   <a
                     href={item.href}
                     onClick={(e) => handleClick(e, item.href)}
-                    className={`block px-6 py-3 text-sm font-medium transition-colors ${
+                    className={`block px-6 py-3 text-base font-medium transition-colors ${
                       isActive
                         ? "text-primary bg-muted"
                         : "text-muted-foreground hover:text-primary hover:bg-muted"

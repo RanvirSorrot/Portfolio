@@ -30,19 +30,20 @@ const AboutSection = () => {
             initial={{ opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="rounded-xl bg-card/60 backdrop-blur-md border border-border/50 p-6 shadow-sm"
+            whileHover={{ y: -4 }}
+            className="rounded-xl bg-card/60 backdrop-blur-md border border-border/50 p-6 shadow-sm transition-shadow hover:shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.2)] hover:border-primary/40"
           >
             <div className="flex items-center gap-3 mb-4">
-              <GraduationCap className="text-primary" size={22} />
-              <h3 className="font-display font-semibold text-lg">Education</h3>
+              <GraduationCap className="text-primary" size={24} />
+              <h3 className="font-display font-semibold text-xl">Education</h3>
             </div>
-            <p className="font-medium text-foreground">
+            <p className="font-medium text-foreground text-base">
               B.Tech in Computer Science Engineering
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Jaypee University of Information Technology
             </p>
-            <p className="text-xs text-primary font-medium mt-1 tracking-wider uppercase">
+            <p className="text-sm text-primary font-medium mt-1 tracking-wider uppercase">
               2020 – 2024
             </p>
           </motion.div>
@@ -51,17 +52,18 @@ const AboutSection = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="rounded-xl bg-card/60 backdrop-blur-md border border-border/50 p-6 shadow-sm space-y-2"
+            whileHover={{ y: -4 }}
+            className="rounded-xl bg-card/60 backdrop-blur-md border border-border/50 p-6 shadow-sm space-y-2 transition-shadow hover:shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.2)] hover:border-primary/40"
           >
-            <h3 className="font-display font-semibold text-lg mb-3">Quick Info</h3>
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin size={16} className="text-primary" /> Palwal, Haryana, India
+            <h3 className="font-display font-semibold text-xl mb-3">Quick Info</h3>
+            <p className="flex items-center gap-2 text-base text-muted-foreground">
+              <MapPin size={18} className="text-primary" /> Palwal, Haryana, India
             </p>
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail size={16} className="text-primary" /> ranvirsorrot3005@gmail.com
+            <p className="flex items-center gap-2 text-base text-muted-foreground">
+              <Mail size={18} className="text-primary" /> ranvirsorrot3005@gmail.com
             </p>
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone size={16} className="text-primary" /> +91-7404817816
+            <p className="flex items-center gap-2 text-base text-muted-foreground">
+              <Phone size={18} className="text-primary" /> +91-7404817816
             </p>
           </motion.div>
         </div>

@@ -1,6 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, useSpring, MotionValue, PanInfo } from "framer-motion";
-import { Code2, Wrench, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+  MotionValue,
+  PanInfo,
+} from "framer-motion";
+import { Code2, Wrench, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 
 const groups = [
   {
@@ -23,7 +30,16 @@ const groups = [
   },
 ];
 
+const LAST_INDEX = groups.length - 1;
+
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+// Swipe needs to travel at least this fraction of a card's slot before we
+// commit to the next/prev card. Below it (or if released early), we
+// spring back to where we started -- exactly how native carousels behave.
+const SWIPE_DISTANCE_RATIO = 0.18;
+const SWIPE_VELOCITY_PX_S = 500;
+const SNAP_SPRING = { type: "spring", stiffness: 280, damping: 32, mass: 0.7 } as const;
 
 // ---- responsive container width -------------------------------------------------
 function useContainerWidth() {
@@ -161,9 +177,7 @@ function SkillCard({
           <Icon size={cardW * 0.08} className="text-white" />
         </div>
         <div>
-          <span className="text-xs tracking-widest uppercase text-muted-foreground/50 font-medium">
-            0{index + 1}
-          </span>
+         
           <h3
             className="font-display font-bold text-foreground leading-tight"
             style={{ fontSize: cardW * 0.065 }}
@@ -195,8 +209,8 @@ function SkillCard({
 }
 
 const SkillsSection = () => {
-  const stickyRef = useRef<HTMLDivElement>(null);
   const [wrapRef, wrapWidth] = useContainerWidth();
+  const [index, setIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   const minCardW = wrapWidth ? Math.min(380, wrapWidth * 0.74) : 300;
@@ -205,50 +219,68 @@ const SkillsSection = () => {
   const GAP = clamp(CARD_W * 0.26, 56, 170);
   const SIDE_X = CARD_W / 2 + (CARD_W * SIDE_SCALE) / 2 + GAP;
 
-  const { scrollYProgress } = useScroll({
-    target: stickyRef,
-    offset: ["start start", "end end"],
-  });
+  // The ONE value that drives every card. It moves two ways:
+  //  - 1:1 with the finger while a drag is in progress (set() directly, no
+  //    easing -- a swipe should feel exactly as fast as the hand moving it)
+  //  - via a spring on release/click/arrow-press, snapping to whichever
+  //    card is now the target
+  const active = useMotionValue(0);
+  const dragStartIndex = useRef(0);
+  const controlsRef = useRef<ReturnType<typeof animate> | null>(null);
 
-  // single spring -> every other value is a pure transform of it, so nothing lags
-  // or double-smooths, and reverse scroll is a perfect mirror of forward scroll.
-  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.5 });
-  const active = useTransform(smooth, (v) => v * (groups.length - 1));
-
-  const leftStringOpacity = useTransform(smooth, [0, 0.06, 1], [0, 1, 1]);
-  const rightStringOpacity = useTransform(smooth, [0, 0.94, 1], [1, 1, 0]);
+  const leftStringOpacity = useTransform(active, [0, 0.18, LAST_INDEX], [0, 1, 1]);
+  const rightStringOpacity = useTransform(active, [0, LAST_INDEX - 0.18, LAST_INDEX], [1, 1, 0]);
 
   const leftEdgeOfCenter = -CARD_W / 2;
   const rightEdgeOfLeftSlot = -SIDE_X + (CARD_W * SIDE_SCALE) / 2;
   const rightEdgeOfCenter = CARD_W / 2;
   const leftEdgeOfRightSlot = SIDE_X - (CARD_W * SIDE_SCALE) / 2;
 
-  // Dragging the card row scrolls the page by the matching amount, so drag
-  // and native scroll drive the exact same value: no separate state, no
-  // conflict. We take full manual control of the gesture here (touchAction:
-  // "none" below) instead of leaving vertical panning to the browser —
-  // handing vertical off to native touch scrolling is what caused mobile
-  // swipes to get "stuck": the instant a touch drifts even slightly
-  // vertically, the browser locks the whole gesture to its own scroll and
-  // never lets horizontal movement reach this handler. Forwarding both axes
-  // ourselves means nothing is left for the browser to hijack, and vertical
-  // drags still feel like normal 1:1 scrolling since we forward delta.y
-  // directly. Dragging a distance of SIDE_X horizontally moves through
-  // exactly one card.
+  const goTo = useCallback(
+    (target: number) => {
+      const clamped = clamp(target, 0, LAST_INDEX);
+      setIndex(clamped);
+      controlsRef.current?.stop();
+      controlsRef.current = animate(active, clamped, SNAP_SPRING);
+    },
+    [active]
+  );
+
+  const handlePanStart = () => {
+    controlsRef.current?.stop();
+    dragStartIndex.current = index;
+    setIsDragging(true);
+  };
+
   const handlePan = (_event: unknown, info: PanInfo) => {
-    const sensitivity = window.innerHeight / SIDE_X;
-    window.scrollBy({ top: -info.delta.y - info.delta.x * sensitivity, left: 0 });
+    // Rubber-band a little past the first/last card so it's obvious
+    // there's nothing more to swipe to, instead of feeling stuck.
+    const raw = dragStartIndex.current - info.offset.x / SIDE_X;
+    active.set(clamp(raw, -0.4, LAST_INDEX + 0.4));
+  };
+
+  const handlePanEnd = (_event: unknown, info: PanInfo) => {
+    setIsDragging(false);
+    const { offset, velocity } = info;
+    let target = dragStartIndex.current;
+
+    if (offset.x < -SIDE_X * SWIPE_DISTANCE_RATIO || velocity.x < -SWIPE_VELOCITY_PX_S) {
+      target = dragStartIndex.current + 1;
+    } else if (offset.x > SIDE_X * SWIPE_DISTANCE_RATIO || velocity.x > SWIPE_VELOCITY_PX_S) {
+      target = dragStartIndex.current - 1;
+    }
+    goTo(target);
   };
 
   return (
-    <section id="skills" className="relative">
+    <section id="skills" className="relative py-20 md:py-28">
       <style>{`
         @keyframes skillStringFlow {
           to { stroke-dashoffset: -30; }
         }
       `}</style>
 
-      <div className="max-w-6xl mx-auto px-6 pt-20 md:pt-28 pb-4 text-center">
+      <div className="max-w-6xl mx-auto px-6 pb-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -258,51 +290,47 @@ const SkillsSection = () => {
           <h2 className="section-title">Skills</h2>
           <p className="section-subtitle mx-auto">Technologies and tools I work with.</p>
         </motion.div>
-        <p className="text-xs text-muted-foreground/40 mt-3 tracking-widest uppercase">
-          scroll or drag to explore
-        </p>
+    
       </div>
 
-      <div ref={stickyRef} style={{ height: `${groups.length * 100}vh` }} className="relative">
-        <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
-          <motion.div
-            ref={wrapRef}
-            className="relative w-full max-w-7xl"
-            style={{
-              height: CARD_W * 0.95,
-              perspective: 1400,
-              cursor: isDragging ? "grabbing" : "grab",
-              touchAction: "none",
-            }}
-            onPan={handlePan}
-            onPanStart={() => setIsDragging(true)}
-            onPanEnd={() => setIsDragging(false)}
-          >
-            <ConnectorString
-              x1={rightEdgeOfLeftSlot}
-              x2={leftEdgeOfCenter}
-              opacity={leftStringOpacity}
-            />
-            <ConnectorString
-              x1={rightEdgeOfCenter}
-              x2={leftEdgeOfRightSlot}
-              opacity={rightStringOpacity}
-            />
+      <div
+        ref={wrapRef}
+        className="relative w-full max-w-7xl mx-auto flex items-center justify-center overflow-hidden select-none"
+        style={{ height: CARD_W * 0.95, perspective: 1400 }}
+      >
+        <motion.div
+          className="absolute inset-0"
+          style={{ cursor: isDragging ? "grabbing" : "grab", touchAction: "pan-y" }}
+          onPanStart={handlePanStart}
+          onPan={handlePan}
+          onPanEnd={handlePanEnd}
+        >
+          <ConnectorString
+            x1={rightEdgeOfLeftSlot}
+            x2={leftEdgeOfCenter}
+            opacity={leftStringOpacity}
+          />
+          <ConnectorString
+            x1={rightEdgeOfCenter}
+            x2={leftEdgeOfRightSlot}
+            opacity={rightStringOpacity}
+          />
 
-            {groups.map((g, i) => (
-              <SkillCard
-                key={g.label}
-                group={g}
-                index={i}
-                active={active}
-                cardW={CARD_W}
-                sideScale={SIDE_SCALE}
-                sideX={SIDE_X}
-              />
-            ))}
-          </motion.div>
-        </div>
+          {groups.map((g, i) => (
+            <SkillCard
+              key={g.label}
+              group={g}
+              index={i}
+              active={active}
+              cardW={CARD_W}
+              sideScale={SIDE_SCALE}
+              sideX={SIDE_X}
+            />
+          ))}
+        </motion.div>
       </div>
+
+     
     </section>
   );
 };

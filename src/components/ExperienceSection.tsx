@@ -147,32 +147,35 @@ useMotionValueEvent(scrollYProgress, "change", (latest) => {
                       leftSide ? "md:pr-12 md:text-right" : "md:pl-12"
                     }`}
                   >
-                    <div className="rounded-xl bg-card/70 backdrop-blur-md border border-border/50 p-6 shadow-sm">
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      className="rounded-xl bg-card/70 backdrop-blur-md border border-border/50 p-6 shadow-sm transition-shadow hover:shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.2)] hover:border-primary/40"
+                    >
                       <div
                         className={`flex items-center gap-2 mb-2 ${
                           leftSide ? "md:justify-end" : ""
                         }`}
                       >
-                        <Icon size={16} className="text-primary" />
-                        <span className="text-xs font-medium text-primary tracking-wider uppercase">
+                        <Icon size={18} className="text-primary" />
+                        <span className="text-sm font-medium text-primary tracking-wider uppercase">
                           {it.period}
                         </span>
                       </div>
-                      <h3 className="font-display font-semibold text-lg text-foreground">
+                      <h3 className="font-display font-semibold text-xl text-foreground">
                         {it.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-3">{it.org}</p>
+                      <p className="text-base text-muted-foreground mb-3">{it.org}</p>
                       {it.summary && (
-                        <p className="text-sm text-muted-foreground">{it.summary}</p>
+                        <p className="text-base text-muted-foreground">{it.summary}</p>
                       )}
                       {it.points && (
-                        <ul className="list-disc mt-3 space-y-1 text-sm text-muted-foreground pl-5 text-left">
+                        <ul className="list-disc mt-3 space-y-1 text-base text-muted-foreground pl-5 text-left">
                           {it.points.map((p, idx) => (
                             <li key={idx}>{p}</li>
                           ))}
                         </ul>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
 
                   <div className="hidden md:block md:w-1/2" aria-hidden />

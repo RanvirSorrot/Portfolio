@@ -47,23 +47,23 @@ const ContactSection = () => {
               { name: "email", label: "Email", type: "email" },
             ].map((field) => (
               <div key={field.name}>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label className="block text-base font-medium text-foreground mb-1.5">
                   {field.label}
                 </label>
                 <input
                   type={field.type}
                   required
-                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-background/80 backdrop-blur-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-background/80 backdrop-blur-sm text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                   placeholder={`Your ${field.label.toLowerCase()}`}
                 />
               </div>
             ))}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Message</label>
+              <label className="block text-base font-medium text-foreground mb-1.5">Message</label>
               <textarea
                 required
                 rows={4}
-                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background/80 backdrop-blur-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background/80 backdrop-blur-sm text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
                 placeholder="Your message..."
               />
             </div>
@@ -72,7 +72,7 @@ const ContactSection = () => {
               type="submit"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity"
             >
               {submitted ? <>✓ Sent!</> : <><Send size={16} /> Send Message</>}
             </motion.button>
@@ -85,20 +85,20 @@ const ContactSection = () => {
             className="space-y-6"
           >
             <div className="space-y-3">
-              <p className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Mail size={16} className="text-primary" />
+              <p className="flex items-center gap-3 text-base text-muted-foreground">
+                <Mail size={18} className="text-primary" />
                 <a href="mailto:ranvirsorrot3005@gmail.com" className="hover:text-primary transition-colors">
                   ranvirsorrot3005@gmail.com
                 </a>
               </p>
-              <p className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Phone size={16} className="text-primary" />
+              <p className="flex items-center gap-3 text-base text-muted-foreground">
+                <Phone size={18} className="text-primary" />
                 <a href="tel:+917404817816" className="hover:text-primary transition-colors">
                   +91-7404817816
                 </a>
               </p>
-              <p className="flex items-center gap-3 text-sm text-muted-foreground">
-                <MapPin size={16} className="text-primary" /> Palwal, Haryana, India
+              <p className="flex items-center gap-3 text-base text-muted-foreground">
+                <MapPin size={18} className="text-primary" /> Palwal, Haryana, India
               </p>
             </div>
 
